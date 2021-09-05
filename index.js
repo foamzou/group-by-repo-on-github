@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
-// @match        https://github.com/search?q=*
+// @match        https://github.com/search?q=*type=code
 // @grant        none
 // ==/UserScript==
 let pageCount = 0;
