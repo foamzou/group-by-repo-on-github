@@ -6,6 +6,8 @@
 // @author       foamzou
 // @match        https://github.com/search?q=*type=code
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
+// @downloadURL  https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
 // ==/UserScript==
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
