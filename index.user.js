@@ -1,35 +1,85 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.1
+// @version      0.1.1
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
-// @match        https://github.com/search?q=*type=code
+// @match        https://github.com/search?q=*
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
 // ==/UserScript==
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
+const BtnGroupById = 'btnGroupBy';
 let shouldLoading = true;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const debug = false;
 
 (function() {
     'use strict';
-    init();
+    tryInit();
 })();
 
-function init() {
+function isSupportThePage() {
+    if (document.location.search.match(/type=code/)) {
+        return true;
+    }
+    l(`not support ${document.location}`);
+    return false;
+}
+
+// for apply the script while url change
+(function(history){
+    const pushState = history.pushState;
+    history.pushState = function(state) {
+        if (typeof history.onpushstate == "function") {
+            history.onpushstate({state: state});
+        }
+        const ret = pushState.apply(history, arguments);
+        tryInit();
+        return ret;
+    }
+})(window.history);
+
+async function tryInit() {
+    l('tryInit');
+    if (!isSupportThePage()) {
+        return;
+    }
+    if ((await tryWaitEle()) === false) {
+        l('wait ele failed, do not setup init UI');
+        return;
+    }
     pageCount = getPageTotalCount();
     l(`total count: ${pageCount}`)
     initUI();
 }
 
+async function tryWaitEle() {
+    const MAX_RETRY_COUNT = 20;
+    let retry = 0;
+    while (true) {
+        if (document.getElementsByClassName("pagination") && document.body.innerText.match(/code result/)) {
+            l('find ele');
+            return true;
+        }
+        l('ele not found, wait a while');
+        if (++retry > MAX_RETRY_COUNT) {
+            return false;
+        }
+        await sleep(1000);
+    }
+}
+
 function initUI() {
+    if (document.getElementById(BtnGroupById)) {
+        l('have created btn, skip');
+        return;
+    }
     const createBtn = () => {
         const btnNode = document.createElement('button');
-        btnNode.id = 'btnGroupBy';
+        btnNode.id = BtnGroupById;
         btnNode.className = 'text-center btn btn-primary ml-3';
         btnNode.setAttribute('style', 'padding: 3px 12px;');
         btnNode.innerHTML = 'Start Group By Repo';
@@ -39,7 +89,7 @@ function initUI() {
         parentNode.insertBefore(btnNode, menuNode);
     }
     createBtn();
-    document.getElementById("btnGroupBy").addEventListener("click", startGroupByRepo);
+    document.getElementById(BtnGroupById).addEventListener("click", startGroupByRepo);
 
 }
 
@@ -105,12 +155,12 @@ function abortLoading() {
     document.getElementById("btnAbortLoading").innerHTML = 'Aborting...';
 }
 
-function setProgressText(current, total, abort = false) {
+function setProgressText(current, total, content = false) {
     const els = document.querySelector('#loadTextNode');
-    if (abort) {
+    if (content) {
         document.getElementById("btnAbortLoading").remove();
         els.setAttribute("style", "text-align: center;width: 100%;float:left;line-height: 30px;");
-        els.innerHTML = `${els.innerHTML}. Load Aborted Now`;
+        els.innerHTML = `${els.innerHTML}. ${content}`;
     } else {
         els.innerHTML = `Load ${current}/${total} Page`;
     }
@@ -183,7 +233,7 @@ async function showMore() {
     if (pageCount <= 1) return;
     for (let i = 2; i<= pageCount; ++i) {
         if (!shouldLoading) {
-            setProgressText(0, 0, true);
+            setProgressText(0, 0, 'Load Aborted Now');
             break;
         }
         l(`load page ${i} ... `)
@@ -191,7 +241,7 @@ async function showMore() {
         setProgressText(i, pageCount);
         await sleep(1000);
     }
-
+    setProgressText(0, 0, 'Load Finished')
 }
 
 async function fetchAndParse(pageNum) {
@@ -297,3 +347,4 @@ function removeElementsByClass(className){
 function l(msg) {
     debug && console.log(msg)
 }
+
