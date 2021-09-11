@@ -12,4 +12,4 @@ Click the <a href="https://github.com/foamzou/group-by-repo-on-github/raw/main/i
 * The new page like the follow snapshot
     * Merged Pages: When the search results are paged, the page will be automatically fetched and updated to the current page in real time. If you do not want to continue loading new content, you can click the abort button at any time to terminate the fetch
     * List All Repo: The helper block shows all repo and info, such as stars,language
-    <img src="./snapshot/1-2.png" />
+    <img src="./snapshot/1-2-1.png" />

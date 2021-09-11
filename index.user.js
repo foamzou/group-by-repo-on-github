@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.2.0
+// @version      0.2.1
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?q=*
@@ -226,6 +226,9 @@ function updateContentTableItem(repoName, fileCount) {
         // async fetch repo info
         getRepoInfo(repoName).then(info => {
             l(info);
+            if (!info.language) {
+                info.language = '?';
+            }
             const langIcon = getLangIcon(info.language);
             langNode.innerHTML = langIcon ? `<img alt="${info.language}" src="${langIcon}" style="width: 15px;"> ${info.language}` : info.language;
             starCounterNode.textContent = `⭐ ${info ? info.stars : '?'} `;
@@ -397,12 +400,12 @@ async function getRepoInfoByFetchHtml(repoName) {
         l(`try to getRepoInfoByFetchHtml: ${repoName}`)
         const response = await fetch(`https://github.com/${repoName}`)
         const data = await response.text();
-        const stars = data.match(/"(.+?) users starred this repository"/)[1];
+        const stars = data.match(/"(.+?) user.* starred this repository"/)[1];
         // ignore error when these optional field not parsed succefuly
         let watch, fork, language;
         try {
-            watch = data.match(/"(.+?) user.+ watching this repository"/)[1];
-            fork = data.match(/"(.+?) user.+forked this repository"/)[1];
+            watch = data.match(/"(.+?) user.* watching this repository"/)[1];
+            fork = data.match(/"(.+?) user.*forked this repository"/)[1];
             language = data.match(/Languages[\s\S]+?color-text-primary text-bold mr-1">(.+?)<\/span>/)[1];
         } catch(e) {
             l(e);
@@ -455,5 +458,6 @@ function removeElementsByClass(className){
 function l(msg) {
     debug && console.log(msg)
 }
+
 
 
