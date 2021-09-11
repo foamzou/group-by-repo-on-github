@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.1.1
+// @version      0.2.0
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?q=*
@@ -12,6 +12,7 @@
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
 const BtnGroupById = 'btnGroupBy';
+
 let shouldLoading = true;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const debug = false;
@@ -208,13 +209,38 @@ function updateContentTableItem(repoName, fileCount) {
         aNode.href = `#${getRepoAnchorId(repoName)}`;
         aNode.innerHTML = repoName;
 
+        const infoNode = document.createElement('div');
+
         const fileCounterSpanNode = document.createElement('span');
         fileCounterSpanNode.id = fileCounterSpanNodeId;
-        fileCounterSpanNode.setAttribute('style', 'float: right');
-        fileCounterSpanNode.innerHTML = '0 files';
+        fileCounterSpanNode.setAttribute('style', 'width:50px;display:inline-block');
+        fileCounterSpanNode.innerHTML = '📃 0';
+
+        const starCounterNode = document.createElement("span");
+        starCounterNode.setAttribute('style', 'padding-left:5px;width:80px;display:inline-block');
+        starCounterNode.textContent = '⭐ ?';
+
+        const langNode = document.createElement("span");
+        langNode.setAttribute('style', 'padding-left:5px;width:100px;display:inline-block');
+
+        // async fetch repo info
+        getRepoInfo(repoName).then(info => {
+            l(info);
+            const langIcon = getLangIcon(info.language);
+            langNode.innerHTML = langIcon ? `<img alt="${info.language}" src="${langIcon}" style="width: 15px;"> ${info.language}` : info.language;
+            starCounterNode.textContent = `⭐ ${info ? info.stars : '?'} `;
+        });
+
+        infoNode.appendChild(fileCounterSpanNode);
+        infoNode.appendChild(starCounterNode);
+        infoNode.appendChild(langNode);
+
+        const hrNode = document.createElement("hr");
+        hrNode.setAttribute('style', 'margin:2px;');
 
         liNode.appendChild(aNode);
-        liNode.appendChild(fileCounterSpanNode);
+        liNode.appendChild(infoNode);
+        liNode.appendChild(hrNode);
 
         const ulNode = document.querySelector(`#${ContentTableUlNodeId}`);
         ulNode.appendChild(liNode);
@@ -222,7 +248,7 @@ function updateContentTableItem(repoName, fileCount) {
 
     const updateFileCount = () => {
         const fileCounterSpanNode = document.querySelector(`#${fileCounterSpanNodeId}`);
-        fileCounterSpanNode.innerHTML = `${fileCount} files`;
+        fileCounterSpanNode.innerHTML = `📃 ${fileCount} `;
     };
 
     createLiNodeIfNotExist();
@@ -337,6 +363,88 @@ function addCodeEle(ele) {
 
 }
 
+async function getRepoInfo(repoName) {
+    let info = await getRepoInfoByApi(repoName);
+    if (info) {
+        return info;
+    }
+    // coz api limit, try from html
+    return await getRepoInfoByFetchHtml(repoName);
+}
+
+async function getRepoInfoByApi(repoName) {
+    try {
+        l(`try to getRepoInfoByApi: ${repoName}`)
+        const response = await fetch(`https://api.github.com/repos/${repoName}`)
+        const data = await response.json();
+        if (data.stargazers_count === undefined) {
+            return false;
+        }
+        return {
+            stars: data.stargazers_count,
+            watch: data.watchers_count,
+            fork: data.forks_count,
+            language: data.language
+        };
+    } catch (e) {
+        l(e);
+    }
+    return false;
+}
+
+async function getRepoInfoByFetchHtml(repoName) {
+    try {
+        l(`try to getRepoInfoByFetchHtml: ${repoName}`)
+        const response = await fetch(`https://github.com/${repoName}`)
+        const data = await response.text();
+        const stars = data.match(/"(.+?) users starred this repository"/)[1];
+        // ignore error when these optional field not parsed succefuly
+        let watch, fork, language;
+        try {
+            watch = data.match(/"(.+?) user.+ watching this repository"/)[1];
+            fork = data.match(/"(.+?) user.+forked this repository"/)[1];
+            language = data.match(/Languages[\s\S]+?color-text-primary text-bold mr-1">(.+?)<\/span>/)[1];
+        } catch(e) {
+            l(e);
+        }
+        return {
+            stars,
+            watch,
+            fork,
+            language
+        };
+    } catch (e) {
+        l(e);
+    }
+    return false;
+}
+
+function getLangIcon(lang) {
+    if (!lang) {
+        return false;
+    }
+    lang = lang.toLowerCase();
+    const config = {
+        javascript: 'js',
+        python: 'python',
+        java: 'java',
+        go: 'golang',
+        ruby: 'ruby',
+        typescript: 'ts',
+        'c++': 'cpp',
+        php: 'php',
+        'c#': 'csharp',
+        c: 'c',
+        shell: 'shell',
+        dart: 'dart',
+        rust: 'rust',
+        kotlin: 'kotlin',
+        swift: 'swift',
+    };
+    return config[lang] ? `https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/lang-icon/${config[lang]}.png` : false;
+}
+
+
 function removeElementsByClass(className){
     const elements = document.getElementsByClassName(className);
     while(elements.length > 0){
@@ -347,4 +455,5 @@ function removeElementsByClass(className){
 function l(msg) {
     debug && console.log(msg)
 }
+
 
