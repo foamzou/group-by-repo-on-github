@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.2.1
+// @version      0.2.2
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?q=*
@@ -61,7 +61,7 @@ async function tryWaitEle() {
     const MAX_RETRY_COUNT = 20;
     let retry = 0;
     while (true) {
-        if (document.getElementsByClassName("pagination") && document.body.innerText.match(/code result/)) {
+        if (document.body.innerText.match(/code result/)) {
             l('find ele');
             return true;
         }
@@ -85,9 +85,7 @@ function initUI() {
         btnNode.setAttribute('style', 'padding: 3px 12px;');
         btnNode.innerHTML = 'Start Group By Repo';
 
-        const menuNode = document.querySelector('.select-menu');
-        const parentNode = menuNode.parentNode;
-        parentNode.insertBefore(btnNode, menuNode);
+        document.querySelectorAll('h3')[1].parentNode.appendChild(btnNode); // todo get the h3 tag by match html content
     }
     createBtn();
     document.getElementById(BtnGroupById).addEventListener("click", startGroupByRepo);
@@ -297,6 +295,9 @@ async function fetchAndParse(pageNum) {
 }
 
 function getPageTotalCount() {
+    if (!document.getElementsByClassName("pagination")[0]) {
+        return 1;
+    }
     const totalPageList = document.getElementsByClassName("pagination")[0].querySelectorAll("a");
     return parseInt(totalPageList[totalPageList.length -2].innerText)
 }
