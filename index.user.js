@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.2.2
+// @version      0.2.3
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?q=*
@@ -407,7 +407,7 @@ async function getRepoInfoByFetchHtml(repoName) {
         try {
             watch = data.match(/"(.+?) user.* watching this repository"/)[1];
             fork = data.match(/"(.+?) user.*forked this repository"/)[1];
-            language = data.match(/Languages[\s\S]+?color-text-primary text-bold mr-1">(.+?)<\/span>/)[1];
+            language = data.match(/Languages[\s\S]+?text-bold mr-1">(.+?)<\/span>/)[1];
         } catch(e) {
             l(e);
         }
