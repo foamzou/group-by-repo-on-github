@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.2.3
+// @version      0.2.4
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?q=*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
-// @downloadURL  https://raw.githubusercontent.com/foamzou/group-by-repo-on-github/main/index.js
+// @updateURL    https://github.com/foamzou/group-by-repo-on-github/raw/main/index.user.js
+// @downloadURL  https://github.com/foamzou/group-by-repo-on-github/raw/main/index.user.js
 // ==/UserScript==
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
 const BtnGroupById = 'btnGroupBy';
-const versionCodeText = "versionCode1";
+const versionCodeText = "versionCode2";
 
 let shouldLoading = true;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -22,6 +22,29 @@ const debug = false;
     'use strict';
     tryInit();
 })();
+
+async function checkUpdate() {
+    const coreTextRes = await fetch("https://github.com/foamzou/group-by-repo-on-github/blob/main/index.user.js");
+    const coreText = await coreTextRes.text();
+    const latestCodeText = coreText.match(/versionCode(\d+)/);
+    const currentCode = versionCodeText.replace('versionCode', '');
+
+    if (!latestCodeText || !latestCodeText[1]) {
+        l('parse latest code failed')
+        return;
+    }
+
+    const latestCode = latestCodeText[1];
+
+    l(`latest version(${latestCode}), current code is ${currentCode}`)
+    if (currentCode >= latestCode) {
+        return;
+    }
+
+    // tips has new version
+    l(`need to upgrade to the latest version`);
+    document.getElementById('checkUpdate').setAttribute('style', "display:block")
+}
 
 function isSupportThePage() {
     if (document.location.search.match(/type=code/)) {
@@ -114,6 +137,8 @@ function startGroupByRepo() {
         const toolBoxNode = document.createElement('div');
         toolBoxNode.id = 'toolBoxNode';
         toolBoxNode.innerHTML = `
+            <div id="checkUpdate" style="display: none;"><a style="color: red" href="https://github.com/foamzou/group-by-repo-on-github/raw/main/index.user.js" target="_blank">The plugin have a new version. Click me upgrade!!</a></div>
+
             <div style="height: 30px;">
                 <div id="loadTextNode" style="text-align: center;width: 200px;float:left;line-height: 30px;">Load 1/1 Page</div>
                 <span id="btnAbortLoading" class="btn btn-sm" style="float:right">Abort Loading</span></div>
@@ -133,6 +158,9 @@ function startGroupByRepo() {
         contentTableNode.appendChild(ulNode);
 
         resultNode.parentNode.insertBefore(contentTableNode, resultNode.nextElementSibling);
+
+        // async check the latest version
+        checkUpdate();
 
         document.getElementById("btnAbortLoading").addEventListener("click", abortLoading);
         document.getElementById("btnTop").addEventListener("click", toTop);
@@ -387,8 +415,6 @@ async function getRepoInfoByApi(repoName) {
         }
         return {
             stars: data.stargazers_count,
-            watch: data.watchers_count,
-            fork: data.forks_count,
             language: data.language
         };
     } catch (e) {
@@ -402,19 +428,16 @@ async function getRepoInfoByFetchHtml(repoName) {
         l(`try to getRepoInfoByFetchHtml: ${repoName}`)
         const response = await fetch(`https://github.com/${repoName}`)
         const data = await response.text();
-        const stars = data.match(/"(.+?) user.* starred this repository"/)[1];
+        const stars = data.match(/"(\d+) user.* starred this repository"/)[1];
         // ignore error when these optional field not parsed succefuly
-        let watch, fork, language;
+        let fork, language;
         try {
-            watch = data.match(/"(.+?) user.* watching this repository"/)[1];
-            fork = data.match(/"(.+?) user.*forked this repository"/)[1];
             language = data.match(/Languages[\s\S]+?text-bold mr-1">(.+?)<\/span>/)[1];
         } catch(e) {
             l(e);
         }
         return {
             stars,
-            watch,
             fork,
             language
         };
