@@ -12,6 +12,7 @@
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
 const BtnGroupById = 'btnGroupBy';
+const versionCode = 1;
 
 let shouldLoading = true;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
