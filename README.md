@@ -13,3 +13,6 @@ Click the <a href="https://github.com/foamzou/group-by-repo-on-github/raw/main/i
     * Merged Pages: When the search results are paged, the page will be automatically fetched and updated to the current page in real time. If you do not want to continue loading new content, you can click the abort button at any time to terminate the fetch
     * List All Repo: The helper block shows all repo and info, such as stars,language
     <img src="./snapshot/1-2-1.png" />
+
+## Thanks
+<a href="https://jb.gg/OpenSourceSupport"> <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" /> </a>
