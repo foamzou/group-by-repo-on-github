@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Group by repo on github
 // @namespace    https://github.com/foamzou/group-by-repo-on-github
-// @version      0.2.5
+// @version      0.2.6
 // @description  When you search code using github, this script can help you group by repo
 // @author       foamzou
 // @match        https://github.com/search?*
@@ -12,7 +12,7 @@
 let pageCount = 0;
 const ContentTableUlNodeId = 'contentTableUl';
 const BtnGroupById = 'btnGroupBy';
-const versionCodeText = "versionCode3";
+const versionCodeText = "versionCode4";
 
 let shouldLoading = true;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
