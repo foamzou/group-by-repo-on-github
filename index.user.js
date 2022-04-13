@@ -131,7 +131,7 @@ function startGroupByRepo() {
         const contentTableNode = document.createElement('div');
         contentTableNode.id = 'contentTableNode';
         contentTableNode.className = 'col-12 col-md-3 float-left px-2 pt-3 pt-md-0';
-        contentTableNode.setAttribute('style', 'position: fixed; right:1em; top: 62px; border-radius: 15px; background: #f9f9f9 none repeat scroll 0 0; border: 1px solid #aaa; display: table; margin-bottom: 1em; padding: 20px;');
+        contentTableNode.setAttribute('style', 'position: fixed; right:1em; top: 62px; border-radius: 15px; background: none repeat scroll 0 0; border: 1px solid #aaa; display: table; margin-bottom: 1em; padding: 20px;');
 
         // tool box
         const toolBoxNode = document.createElement('div');
